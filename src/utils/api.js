@@ -1,0 +1,200 @@
+/**
+ * API utility functions following FastAPI conventions
+ */
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+/**
+ * Gets the authentication token from storage
+ * @returns {string|null} Bearer token or null
+ */
+export const getAuthToken = () => {
+  return localStorage.getItem('auth_token');
+};
+
+/**
+ * Sets the authentication token in storage
+ * @param {string} token - Bearer token
+ */
+export const setAuthToken = (token) => {
+  localStorage.setItem('auth_token', token);
+};
+
+/**
+ * Removes the authentication token from storage
+ */
+export const removeAuthToken = () => {
+  localStorage.removeItem('auth_token');
+};
+
+/**
+ * Makes an authenticated API request
+ * @param {string} endpoint - API endpoint (e.g., '/core/candidate-bookings')
+ * @param {object} options - Fetch options
+ * @returns {Promise<Response>} Fetch response
+ */
+export const apiRequest = async (endpoint, options = {}) => {
+  const token = getAuthToken();
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  return response;
+};
+
+/**
+ * Handles API error responses
+ * @param {Response} response - Fetch response
+ * @returns {Promise<Error>} Error with message
+ */
+export const handleApiError = async (response) => {
+  let errorMessage = 'An error occurred';
+  
+  try {
+    const errorData = await response.json();
+    if (errorData.detail) {
+      errorMessage = errorData.detail;
+    } else if (typeof errorData === 'string') {
+      errorMessage = errorData;
+    }
+  } catch (e) {
+    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+  }
+
+  const error = new Error(errorMessage);
+  error.status = response.status;
+  return error;
+};
+
+/**
+ * Creates a new booking
+ * @param {object} bookingData - Booking data
+ * @param {number} bookingData.candidate_id - Candidate ID
+ * @param {number} bookingData.client_id - Client ID
+ * @param {string} bookingData.scheduled_at - ISO 8601 datetime string
+ * @param {number} bookingData.duration_minutes - Duration in minutes
+ * @param {string} bookingData.timezone - IANA timezone (e.g., "America/New_York")
+ * @returns {Promise<object>} Created booking object
+ */
+export const createBooking = async (bookingData) => {
+  const response = await apiRequest('/core/candidate-bookings', {
+    method: 'POST',
+    body: JSON.stringify({
+      candidate_id: bookingData.candidate_id,
+      client_id: bookingData.client_id,
+      scheduled_at: bookingData.scheduled_at,
+      duration_minutes: bookingData.duration_minutes || 30,
+      timezone: bookingData.timezone,
+    }),
+  });
+
+  if (!response.ok) {
+    throw await handleApiError(response);
+  }
+
+  return await response.json();
+};
+
+/**
+ * Gets a single booking by ID
+ * @param {number} bookingId - Booking ID
+ * @returns {Promise<object>} Booking object
+ */
+export const getBooking = async (bookingId) => {
+  const response = await apiRequest(`/core/candidate-bookings/${bookingId}`);
+
+  if (!response.ok) {
+    throw await handleApiError(response);
+  }
+
+  return await response.json();
+};
+
+/**
+ * Lists bookings with optional filters
+ * @param {object} filters - Filter parameters
+ * @param {number} filters.candidate_id - Filter by candidate ID
+ * @param {number} filters.client_id - Filter by client ID
+ * @param {string} filters.status - Filter by status
+ * @param {string} filters.scheduled_at_from - ISO 8601 datetime string
+ * @param {string} filters.scheduled_at_to - ISO 8601 datetime string
+ * @returns {Promise<object[]>} Array of booking objects
+ */
+export const listBookings = async (filters = {}) => {
+  const queryParams = new URLSearchParams();
+  
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      queryParams.append(key, value);
+    }
+  });
+
+  const queryString = queryParams.toString();
+  const endpoint = `/core/candidate-bookings${queryString ? `?${queryString}` : ''}`;
+
+  const response = await apiRequest(endpoint);
+
+  if (!response.ok) {
+    throw await handleApiError(response);
+  }
+
+  return await response.json();
+};
+
+/**
+ * Updates a booking
+ * @param {number} bookingId - Booking ID
+ * @param {object} bookingData - Updated booking data
+ * @returns {Promise<object>} Updated booking object
+ */
+export const updateBooking = async (bookingId, bookingData) => {
+  const response = await apiRequest(`/core/candidate-bookings/${bookingId}`, {
+    method: 'PUT',
+    body: JSON.stringify(bookingData),
+  });
+
+  if (!response.ok) {
+    throw await handleApiError(response);
+  }
+
+  return await response.json();
+};
+
+/**
+ * Cancels a booking (sets status to "cancelled")
+ * @param {number} bookingId - Booking ID
+ * @returns {Promise<object>} Updated booking object
+ */
+export const cancelBooking = async (bookingId) => {
+  return updateBooking(bookingId, { status: 'cancelled' });
+};
+
+/**
+ * Deletes a booking
+ * @param {number} bookingId - Booking ID
+ * @returns {Promise<void>}
+ */
+export const deleteBooking = async (bookingId) => {
+  const response = await apiRequest(`/core/candidate-bookings/${bookingId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw await handleApiError(response);
+  }
+};
+
+
+
