@@ -196,5 +196,86 @@ export const deleteBooking = async (bookingId) => {
   }
 };
 
+/**
+ * Formats phone number to E.164 format
+ * @param {string} phone - Phone number
+ * @returns {string} E.164 formatted phone number
+ */
+export const formatPhoneNumber = (phone) => {
+  // Remove all non-digit characters except +
+  const cleaned = phone.replace(/[^\d+]/g, '');
+  // Add + prefix if not present
+  return cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
+};
 
+/**
+ * Checks if a candidate has any scheduled calls
+ * @param {string} candidateId - Candidate UUID
+ * @returns {Promise<object|null>} Scheduled call check response or null if not found
+ */
+export const checkScheduledCall = async (candidateId) => {
+  const response = await apiRequest(`/schedule/candidates/${candidateId}/scheduled-call`);
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      // Candidate not found - return null instead of throwing
+      return null;
+    }
+    throw await handleApiError(response);
+  }
+
+  return await response.json();
+};
+
+/**
+ * Schedules a call for a future date/time
+ * @param {object} callData - Call scheduling data
+ * @param {string} callData.candidate_id - Candidate UUID (required)
+ * @param {string} callData.candidate_phone_number - Candidate's phone number in E.164 format (required)
+ * @param {string} callData.scheduled_datetime - ISO 8601 datetime in UTC (required)
+ * @returns {Promise<object>} VAPI call response
+ */
+export const scheduleCall = async (callData) => {
+  const requestBody = {
+    candidate_id: callData.candidate_id,
+    candidate_phone_number: formatPhoneNumber(callData.candidate_phone_number),
+    scheduled_datetime: callData.scheduled_datetime,
+  };
+
+  const response = await apiRequest('/call-trigger/calls/scheduled', {
+    method: 'POST',
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    throw await handleApiError(response);
+  }
+
+  return await response.json();
+};
+
+/**
+ * Triggers an immediate call
+ * @param {object} callData - Call data
+ * @param {string} callData.candidate_id - Candidate UUID (required)
+ * @param {string} callData.candidate_phone_number - Candidate's phone number in E.164 format (required)
+ * @returns {Promise<object>} VAPI call response
+ */
+export const triggerImmediateCall = async (callData) => {
+  const requestBody = {
+    candidate_id: callData.candidate_id,
+    candidate_phone_number: formatPhoneNumber(callData.candidate_phone_number),
+  };
+
+  const response = await apiRequest('/call-trigger/calls/immediate', {
+    method: 'POST',
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    throw await handleApiError(response);
+  }
+
+  return await response.json();
+};
 

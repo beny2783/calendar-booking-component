@@ -1,6 +1,6 @@
 import './TimeSlotSelector.css';
 
-const TimeSlotSelector = ({ selectedTime, onTimeSelect, selectedDate }) => {
+const TimeSlotSelector = ({ selectedTime, onTimeSelect, selectedDate, onNext }) => {
   // Generate time slots 24/7 in 15-minute intervals
   const generateTimeSlots = () => {
     const slots = [];
@@ -29,19 +29,37 @@ const TimeSlotSelector = ({ selectedTime, onTimeSelect, selectedDate }) => {
     );
   }
 
+  const formattedDate = selectedDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
+  });
+
   return (
     <div className="time-slot-selector">
-      <h3 className="time-slot-title">Select a time</h3>
+      <h3 className="time-slot-title">{formattedDate}</h3>
       <div className="time-slots-grid">
-        {timeSlots.map((time) => (
-          <button
-            key={time}
-            className={`time-slot ${selectedTime === time ? 'selected' : ''}`}
-            onClick={() => onTimeSelect(time)}
-          >
-            {time}
-          </button>
-        ))}
+        {timeSlots.map((time) => {
+          const isSelected = selectedTime === time;
+          return (
+            <div key={time} className={`time-slot-wrapper ${isSelected ? 'selected' : ''}`}>
+              <button
+                className={`time-slot ${isSelected ? 'selected' : ''}`}
+                onClick={() => onTimeSelect(time)}
+              >
+                {time}
+              </button>
+              {isSelected && onNext && (
+                <button
+                  className="time-slot-next-button"
+                  onClick={onNext}
+                >
+                  Next
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

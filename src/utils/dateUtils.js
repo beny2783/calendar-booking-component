@@ -1,8 +1,8 @@
 /**
- * Converts a date and time string to ISO 8601 string with timezone offset
- * @param {Date} date - The selected date (local timezone)
+ * Converts a date and time string to ISO 8601 string in UTC, treating input as UK time
+ * @param {Date} date - The selected date
  * @param {string} timeString - Time string in format "H:MM AM/PM" (e.g., "9:00 AM", "2:30 PM")
- * @returns {string} ISO 8601 string with timezone offset (e.g., "2024-01-15T14:30:00-05:00")
+ * @returns {string} ISO 8601 string in UTC (e.g., "2024-01-15T14:30:00Z")
  */
 export const convertToISO8601 = (date, timeString) => {
   // Parse the time string (e.g., "9:00 AM" or "2:30 PM")
@@ -22,28 +22,56 @@ export const convertToISO8601 = (date, timeString) => {
     hours = 0;
   }
 
-  // Create a new date object with the selected date and time in local timezone
-  const localDateTime = new Date(date);
-  localDateTime.setHours(hours, minutes, 0, 0);
-
-  // Get timezone offset in minutes
-  const offsetMinutes = localDateTime.getTimezoneOffset();
-  const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60);
-  const offsetMins = Math.abs(offsetMinutes) % 60;
-  const offsetSign = offsetMinutes <= 0 ? '+' : '-';
+  // Create date components
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(hours).padStart(2, '0');
+  const minute = String(minutes).padStart(2, '0');
   
-  // Format offset as +HH:MM or -HH:MM
-  const offset = `${offsetSign}${String(offsetHours).padStart(2, '0')}:${String(offsetMins).padStart(2, '0')}`;
-
-  // Format as ISO 8601 with timezone offset
-  const year = localDateTime.getFullYear();
-  const month = String(localDateTime.getMonth() + 1).padStart(2, '0');
-  const day = String(localDateTime.getDate()).padStart(2, '0');
-  const hour = String(localDateTime.getHours()).padStart(2, '0');
-  const minute = String(localDateTime.getMinutes()).padStart(2, '0');
-  const second = String(localDateTime.getSeconds()).padStart(2, '0');
-
-  return `${year}-${month}-${day}T${hour}:${minute}:${second}${offset}`;
+  // Create a date string in ISO format (treating it as UK local time)
+  const ukDateTimeString = `${year}-${month}-${day}T${hour}:${minute}:00`;
+  
+  // Convert UK local time to UTC
+  // We'll create a date object and use timezone conversion
+  // Method: Create date as if it's in UK, then get UTC equivalent
+  const ukDateParts = {
+    year,
+    month: parseInt(month) - 1,
+    day: parseInt(day),
+    hour,
+    minute
+  };
+  
+  // Use a reference UTC date to calculate offset
+  const referenceUTC = new Date(Date.UTC(ukDateParts.year, ukDateParts.month, ukDateParts.day, ukDateParts.hour, ukDateParts.minute));
+  
+  // Get what this UTC time would display as in UK timezone
+  const ukDisplay = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).formatToParts(referenceUTC);
+  
+  // Calculate the difference and adjust
+  const ukHour = parseInt(ukDisplay.find(p => p.type === 'hour').value);
+  const ukMinute = parseInt(ukDisplay.find(p => p.type === 'minute').value);
+  const targetHour = parseInt(hour);
+  const targetMinute = parseInt(minute);
+  
+  // Calculate offset in hours
+  const hourDiff = targetHour - ukHour;
+  const minuteDiff = targetMinute - ukMinute;
+  const totalDiffMinutes = hourDiff * 60 + minuteDiff;
+  
+  // Adjust the UTC date
+  const adjustedUTC = new Date(referenceUTC.getTime() + totalDiffMinutes * 60000);
+  
+  return adjustedUTC.toISOString();
 };
 
 /**
@@ -56,38 +84,38 @@ export const parseISO8601 = (isoString) => {
 };
 
 /**
- * Formats an ISO 8601 datetime string for display in local timezone
+ * Formats an ISO 8601 datetime string for display in UK timezone
  * @param {string} isoString - ISO 8601 string from API
  * @returns {object} Object with formatted date and time strings
  */
 export const formatISO8601ForDisplay = (isoString) => {
   const date = parseISO8601(isoString);
-  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const ukTimezone = 'Europe/London';
   
   return {
-    date: date.toLocaleDateString('en-US', {
+    date: date.toLocaleDateString('en-GB', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      timeZone: userTimezone
+      timeZone: ukTimezone
     }),
-    time: date.toLocaleTimeString('en-US', {
+    time: date.toLocaleTimeString('en-GB', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
-      timeZone: userTimezone
+      timeZone: ukTimezone
     }),
-    timezone: userTimezone
+    timezone: ukTimezone
   };
 };
 
 /**
- * Gets the user's timezone in IANA format (e.g., "America/New_York")
- * @returns {string} IANA timezone identifier
+ * Gets the UK timezone in IANA format
+ * @returns {string} IANA timezone identifier (always "Europe/London")
  */
 export const getUserTimezone = () => {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return 'Europe/London';
 };
 
 /**

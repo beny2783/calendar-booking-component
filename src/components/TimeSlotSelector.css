@@ -1,53 +1,170 @@
 .time-slot-selector {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  padding: 0;
 }
 
 .time-slot-placeholder {
   text-align: center;
-  color: #999;
+  color: #9ca3af;
   padding: 40px 20px;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .time-slot-title {
   margin: 0 0 16px 0;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: #1a1a1a;
+  text-transform: capitalize;
 }
 
 .time-slots-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 12px;
-  max-height: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 8px;
+}
+
+.time-slots-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.time-slots-grid::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.time-slots-grid::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.time-slots-grid::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.time-slot-wrapper {
+  display: flex;
+  gap: 0;
+  width: 100%;
+  transition: all 0.15s;
+}
+
+.time-slot-wrapper.selected {
+  gap: 8px;
 }
 
 .time-slot {
   padding: 12px 16px;
-  border: 2px solid #e0e0e0;
+  border: 1px solid #e5e7eb;
   background: white;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  color: #333;
+  transition: all 0.15s;
+  color: #1a1a1a;
+  text-align: left;
+  flex: 1;
+}
+
+.time-slot-wrapper.selected .time-slot {
+  border-radius: 6px 0 0 6px;
+  flex: 1;
 }
 
 .time-slot:hover {
-  border-color: #2196f3;
-  background: #e3f2fd;
+  border-color: #ff6b35;
+  background: #fff5f2;
 }
 
 .time-slot.selected {
-  background: #2196f3;
+  background: #f3f4f6;
+  color: #1a1a1a;
+  border-color: #ff6b35;
+  font-weight: 600;
+}
+
+.time-slot-next-button {
+  padding: 12px 20px;
+  background: #ff6b35;
   color: white;
-  border-color: #2196f3;
+  border: none;
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.time-slot-next-button:hover {
+  background: #e55a2b;
+}
+
+.time-slot-next-button:active {
+  background: #d14a1f;
+}
+
+@media (max-width: 480px) {
+  .time-slot-title {
+    font-size: 14px;
+    margin-bottom: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .time-slot-wrapper {
+    gap: 0;
+  }
+
+  .time-slot-wrapper.selected {
+    gap: 6px;
+  }
+
+  .time-slot {
+    padding: 16px 18px;
+    font-size: 15px;
+    min-height: 52px; /* Larger touch target */
+    -webkit-tap-highlight-color: transparent;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+
+  .time-slot-wrapper.selected .time-slot {
+    border-radius: 10px 0 0 10px;
+  }
+
+  .time-slots-grid {
+    max-height: calc(100vh - 380px);
+    min-height: 220px;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    padding-right: 4px;
+  }
+
+  .time-slot-placeholder {
+    padding: 50px 18px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .time-slot.selected {
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+  }
+
+  .time-slot-next-button {
+    padding: 16px 20px;
+    font-size: 15px;
+    min-height: 52px;
+    border-radius: 0 10px 10px 0;
+    min-width: 90px;
+    font-weight: 600;
+  }
 }
 

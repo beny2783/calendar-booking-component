@@ -1,52 +1,795 @@
 .booking-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 40px 20px;
+  background: linear-gradient(135deg, rgba(173, 216, 230, 0.1) 0%, rgba(144, 238, 144, 0.1) 100%);
+  padding: 20px;
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  position: relative;
+  overflow-x: hidden;
 }
 
 .booking-container {
   max-width: 1200px;
   width: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  min-height: calc(100vh - 40px);
+  position: relative;
+  z-index: 1;
+  overflow: visible; /* Allow badge to extend beyond container */
 }
 
-.booking-header {
-  text-align: center;
-  color: white;
-  margin-bottom: 40px;
+.error-message-top {
+  background: #ffebee;
+  border-bottom: 1px solid #f44336;
+  padding: 16px 24px;
+  color: #c62828;
 }
 
-.booking-header h1 {
-  font-size: 36px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-}
-
-.booking-header p {
-  font-size: 18px;
+.error-message-top p {
   margin: 0;
-  opacity: 0.9;
+  font-size: 14px;
 }
 
-.booking-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+.booking-layout {
+  display: flex;
+  min-height: calc(100vh - 60px);
+}
+
+/* Left Panel - Event Details */
+.event-details-panel {
+  width: 400px;
+  background: white;
+  border-right: 1px solid #e8e8e8;
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.event-info {
+  flex: 1;
+}
+
+.event-description {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.event-description p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a4a4a;
+  margin: 0;
+}
+
+.event-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 24px 0;
+  line-height: 1.2;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace;
+}
+
+.event-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: #4a4a4a;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.meta-icon {
+  color: #6b7280;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Right Panel - Calendar */
+.calendar-panel {
+  flex: 1;
+  padding: 40px 48px;
+  padding-right: 70px; /* Extra padding on right for badge */
+  background: white;
+  position: relative;
+  overflow: visible; /* Allow badge to extend */
+}
+
+.calendar-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: visible; /* Allow badge to extend beyond */
+  padding-right: 60px; /* Add padding to prevent cutoff */
+}
+
+.panel-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace;
+}
+
+.powered-by-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #ff6b35;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 10px 28px;
+  transform: rotate(45deg);
+  transform-origin: center;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  margin-top: -12px;
+  margin-right: -48px;
+  min-width: 180px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-time-container {
+  display: flex;
+  gap: 48px;
+  align-items: flex-start;
+}
+
+.calendar-section {
+  flex: 0 0 auto;
+}
+
+.time-slot-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.timezone-selector {
+  margin-top: 24px;
+}
+
+.timezone-selector label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a4a4a;
+  margin-bottom: 8px;
+}
+
+.timezone-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #1a1a1a;
+  background: white;
+  cursor: pointer;
+}
+
+.timezone-select:focus {
+  outline: none;
+  border-color: #ff6b35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.timezone-display {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #1a1a1a;
+  background: #f9fafb;
+}
+
+.next-button {
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+}
+
+.next-button:hover {
+  background: #e55a2b;
 }
 
 @media (max-width: 968px) {
-  .booking-content {
-    grid-template-columns: 1fr;
+  .booking-page {
+    padding: 12px;
+  }
+
+  .booking-container {
+    border-radius: 12px;
+    min-height: calc(100vh - 24px);
+  }
+
+  .booking-layout {
+  flex-direction: column;
+  }
+
+  .event-details-panel {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e8e8e8;
+    padding: 20px 18px;
+  }
+
+  .event-title {
+    font-size: 22px;
+    margin-bottom: 18px;
+  }
+
+  .event-meta {
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .calendar-panel {
+    padding: 20px 18px;
+  }
+
+  .calendar-panel-header {
+    margin-bottom: 20px;
+  }
+
+  .panel-title {
+    font-size: 19px;
+  }
+
+  .calendar-time-container {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .powered-by-badge {
+    font-size: 9px;
+    padding: 7px 22px;
+    margin-top: -8px;
+    margin-right: -36px;
+    min-width: 150px;
+  }
+
+  .calendar-panel-header {
+    padding-right: 45px;
+  }
+
+  .time-slot-section {
+    width: 100%;
+  }
+
+  .time-slots-grid {
+    max-height: 320px;
+  }
+
+  .time-slot {
+    min-height: 50px;
+  }
+
+  .modal-content {
+    max-width: 95%;
+    margin: 10px;
+    max-height: 90vh;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 20px;
+  }
+
+  .phone-prefix {
+    padding: 12px 10px 12px 14px;
+    font-size: 13px;
+  }
+  
+  .uk-flag {
+    font-size: 17px;
+  }
+  
+  .phone-input-wrapper .phone-input {
+    padding: 12px 14px;
+    font-size: 15px;
+    min-height: 50px;
+  }
+
+  .next-button {
+    min-height: 54px;
+    padding: 16px 24px;
+  }
+
+  .immediate-call-button {
+    min-height: 50px;
   }
 }
 
-.booking-left,
-.booking-right {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+/* Mobile-specific optimizations (480px and below) */
+@media (max-width: 480px) {
+  .booking-page {
+    padding: 0;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  .booking-container {
+    border-radius: 0;
+    min-height: 100vh;
+    box-shadow: none;
+    border: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .error-message-top {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .event-details-panel {
+    padding: 16px 14px;
+  }
+
+  .event-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+    line-height: 1.3;
+  }
+
+  .event-meta {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .meta-item {
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  .meta-item svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .event-description {
+    margin-top: 16px;
+    padding-top: 16px;
+  }
+
+  .event-description p {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .scheduled-call-info {
+    padding: 12px 14px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
+
+  .scheduled-call-header {
+    margin-bottom: 6px;
+  }
+
+  .scheduled-call-label {
+    font-size: 11px;
+  }
+
+  .scheduled-call-status {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+
+  .scheduled-call-time {
+    font-size: 13px;
+  }
+
+  .scheduled-call-info .warning-text {
+    font-size: 11px;
+    margin-top: 6px;
+  }
+
+  .rescheduling-warning {
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    margin-top: 12px;
+    gap: 8px;
+  }
+
+  .rescheduling-warning span {
+    font-size: 12px;
+  }
+
+  .rescheduling-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .rescheduling-notice {
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+
+  .rescheduling-notice strong {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .rescheduling-notice p {
+    font-size: 12px;
+  }
+
+  .immediate-call-section {
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+
+  .call-now-label {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+
+  .immediate-call-button {
+    padding: 16px 20px;
+    font-size: 15px;
+    min-height: 52px; /* Larger touch target */
+    width: 100%;
+    border-radius: 10px;
+  }
+
+  .calendar-panel {
+    padding: 16px 14px;
+    padding-bottom: 100px; /* Space for sticky button */
+  }
+
+  .calendar-panel-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .panel-title {
+    font-size: 17px;
+    line-height: 1.3;
+  }
+
+  .powered-by-badge {
+    display: none;
+  }
+
+  .calendar-time-container {
+    gap: 16px;
+  }
+
+  .time-slot-section {
+    position: relative;
+    scroll-margin-top: 20px; /* Space for sticky header */
+  }
+
+  .time-slots-grid {
+    max-height: calc(100vh - 400px);
+    min-height: 200px;
+    gap: 8px;
+  }
+
+  .time-slot {
+    padding: 16px 18px;
+    font-size: 15px;
+    min-height: 52px; /* Larger touch target */
+    border-radius: 10px;
+    width: 100%;
+  }
+
+  .next-button {
+    position: sticky;
+    bottom: 16px;
+    margin-top: 16px;
+    padding: 18px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    min-height: 56px; /* Larger touch target */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    width: 100%;
+    border-radius: 12px;
+  }
+
+  .timezone-selector {
+    margin-top: 16px;
+  }
+
+  .timezone-selector label {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .timezone-select {
+    padding: 14px 16px;
+    font-size: 15px;
+    min-height: 52px; /* Larger touch target */
+    border-radius: 10px;
+  }
+
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end; /* Slide up from bottom on mobile */
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 95vh;
+    margin: 0;
+    border-radius: 20px 20px 0 0;
+    animation: modalSlideUp 0.3s ease-out;
+  }
+
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .modal-header {
+    padding: 18px 18px 14px;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .modal-header h2 {
+    font-size: 19px;
+    line-height: 1.3;
+  }
+
+  .modal-close-button {
+    width: 44px;
+    height: 44px;
+    font-size: 28px;
+    min-width: 44px; /* Better touch target */
+  }
+
+  .modal-body {
+    padding: 18px;
+    max-height: calc(95vh - 160px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+
+  .confirmation-details {
+    margin-bottom: 18px;
+  }
+
+  .confirmation-details h3 {
+    font-size: 15px;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .detail-row {
+    padding: 8px 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .phone-number-section {
+    margin-top: 18px;
+  }
+
+  .phone-number-section label {
+    font-size: 12px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .phone-input-wrapper {
+    border-width: 2px;
+    border-radius: 10px;
+  }
+
+  .phone-prefix {
+    padding: 16px 12px 16px 16px;
+    min-width: 80px;
+  }
+
+  .uk-flag {
+    font-size: 18px;
+  }
+
+  .country-code {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .phone-input-wrapper .phone-input {
+    padding: 16px 18px;
+    font-size: 16px; /* Prevent zoom on iOS */
+    min-height: 52px;
+  }
+
+  .phone-validation {
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  .phone-hint {
+    font-size: 11px;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  .modal-footer {
+    padding: 14px 18px 18px;
+    position: sticky;
+    bottom: 0;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    gap: 10px;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .modal-cancel-button,
+  .modal-confirm-button {
+    padding: 16px 20px;
+    font-size: 15px;
+    min-height: 52px; /* Larger touch target */
+    flex: 1;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  .booking-form-container {
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: 12px;
+  }
+
+  .form-title {
+    font-size: 15px;
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+
+  .form-group {
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .form-group input {
+    padding: 16px 18px;
+    font-size: 16px; /* Prevent zoom on iOS */
+    min-height: 52px; /* Larger touch target */
+    border-radius: 10px;
+  }
+
+  .submit-button {
+    padding: 18px 24px;
+    font-size: 16px;
+    min-height: 56px; /* Larger touch target */
+    margin-top: 12px;
+    width: 100%;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  /* Improve scrolling experience */
+  .booking-container {
+    overflow-x: hidden;
+  }
+
+  /* Better spacing for confirmation screen */
+  .confirmation-message {
+    padding: 28px 18px;
+    margin: 16px;
+    border-radius: 12px;
+  }
+
+  .confirmation-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  .confirmation-message h2 {
+    font-size: 22px;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .confirmation-message > p {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .booking-details {
+    padding: 18px;
+    margin: 16px 0;
+    border-radius: 10px;
+    background: #f9fafb;
+  }
+
+  .booking-details p {
+    font-size: 13px;
+    margin: 8px 0;
+    line-height: 1.5;
+  }
+
+  .confirmation-note {
+    font-size: 12px;
+    margin-top: 16px;
+    padding: 12px;
+    background: #f0f9ff;
+    border-radius: 8px;
+  }
+
+  .reset-button {
+    padding: 16px 24px;
+    font-size: 15px;
+    min-height: 52px;
+    width: 100%;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-top: 16px;
+  }
+
+  /* Sticky header for better navigation */
+  .calendar-panel-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 5;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  }
+
+  /* Warning message in modal */
+  .warning-message {
+    font-size: 12px !important;
+    padding: 10px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .warning-message p {
+    margin: 0 !important;
+    font-size: 12px !important;
+  }
 }
 
 .booking-form-container {
@@ -91,12 +834,12 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #2196f3;
+  border-color: #ff6b35;
 }
 
 .submit-button {
   padding: 14px 24px;
-  background: #2196f3;
+  background: #ff6b35;
   color: white;
   border: none;
   border-radius: 8px;
@@ -108,7 +851,7 @@
 }
 
 .submit-button:hover {
-  background: #1976d2;
+  background: #e55a2b;
 }
 
 .confirmation-message {
@@ -161,7 +904,7 @@
 }
 
 .booking-details strong {
-  color: #2196f3;
+  color: #ff6b35;
   margin-right: 8px;
 }
 
@@ -210,6 +953,20 @@
   font-size: 14px;
 }
 
+.info-message {
+  background: #fff5f2;
+  border: 1px solid #ff6b35;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  color: #e55a2b;
+}
+
+.info-message p {
+  margin: 0;
+  font-size: 14px;
+}
+
 .duration-info {
   font-size: 14px !important;
   opacity: 0.8;
@@ -226,8 +983,8 @@
 }
 
 .status-scheduled {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #fff5f2;
+  color: #e55a2b;
 }
 
 .status-confirmed {
@@ -266,7 +1023,7 @@
 }
 
 .booking-details a {
-  color: #2196f3;
+  color: #ff6b35;
   text-decoration: none;
   word-break: break-all;
 }
@@ -275,3 +1032,462 @@
   text-decoration: underline;
 }
 
+.scheduled-call-info {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.scheduled-call-info.warning {
+  background-color: #fff3e0;
+  border-color: #ff9800;
+}
+
+.scheduled-call-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.scheduled-call-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scheduled-call-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scheduled-call-status.status-scheduled {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.scheduled-call-status.status-completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.scheduled-call-status.status-cancelled {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.scheduled-call-time {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  line-height: 1.5;
+}
+
+.scheduled-call-info .warning-text {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #f57c00;
+  font-weight: 500;
+}
+
+.scheduled-call-info p {
+  margin: 0;
+}
+
+.rescheduling-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background-color: #fff3e0;
+  border: 1px solid #ff9800;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  margin-top: 0;
+  width: 100%;
+}
+
+.rescheduling-icon {
+  flex-shrink: 0;
+  color: #f57c00;
+  margin-top: 2px;
+}
+
+.rescheduling-warning span {
+  font-size: 13px;
+  color: #e65100;
+  line-height: 1.5;
+}
+
+.rescheduling-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background-color: #fff3e0;
+  border: 1px solid #ff9800;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.rescheduling-notice .rescheduling-icon {
+  flex-shrink: 0;
+  color: #f57c00;
+  margin-top: 2px;
+}
+
+.rescheduling-notice strong {
+  display: block;
+  font-size: 14px;
+  color: #e65100;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.rescheduling-notice p {
+  margin: 0;
+  font-size: 13px;
+  color: #bf360c;
+  line-height: 1.5;
+}
+
+.immediate-call-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.call-now-divider {
+  text-align: center;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.call-now-divider::before,
+.call-now-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #e8e8e8;
+}
+
+.call-now-divider::before {
+  left: 0;
+}
+
+.call-now-divider::after {
+  right: 0;
+}
+
+.call-now-divider span {
+  background: white;
+  padding: 0 12px;
+  color: #6b7280;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 1;
+}
+
+.call-now-label {
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+}
+
+.immediate-call-button {
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.immediate-call-button:hover:not(:disabled) {
+  background-color: #e55a2b;
+}
+
+.immediate-call-button:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+  color: #9ca3af;
+}
+
+.status-triggered,
+.status-scheduled,
+.status-in_progress,
+.status-complete,
+.status-canceled {
+  background: #fff5f2;
+  color: #e55a2b;
+}
+
+/* Confirmation Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #333;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.modal-close-button:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.confirmation-details {
+  margin-bottom: 24px;
+}
+
+.confirmation-details h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.detail-row {
+  padding: 12px 0;
+  font-size: 16px;
+  color: #666;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row strong {
+  color: #ff6b35;
+  margin-right: 8px;
+  display: inline-block;
+  min-width: 60px;
+}
+
+.phone-number-section {
+  margin-top: 24px;
+}
+
+.phone-number-section label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.phone-input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.phone-input-wrapper:focus-within {
+  border-color: #ff6b35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.phone-prefix {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 12px 12px 16px;
+  background: #f9fafb;
+  border-right: 1px solid #e0e0e0;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+.uk-flag {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.country-code {
+  font-size: 14px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Fira Mono', monospace;
+}
+
+.phone-input-wrapper .phone-input {
+  flex: 1;
+  border: none;
+  padding: 12px 16px;
+  font-size: 16px;
+  background: transparent;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Fira Mono', monospace;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.phone-input-wrapper .phone-input:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+.phone-input-wrapper .phone-input:disabled {
+  background: transparent;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.phone-validation {
+  margin-top: 8px;
+  font-size: 12px;
+  min-height: 18px;
+}
+
+.validation-success {
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.validation-error {
+  color: #ef4444;
+}
+
+.phone-hint {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.modal-cancel-button {
+  padding: 12px 24px;
+  background: #f5f5f5;
+  color: #333;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-cancel-button:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.modal-cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-confirm-button {
+  padding: 12px 24px;
+  background: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-confirm-button:hover:not(:disabled) {
+  background: #e55a2b;
+}
+
+.modal-confirm-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
