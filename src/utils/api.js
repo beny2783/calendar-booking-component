@@ -279,3 +279,20 @@ export const triggerImmediateCall = async (callData) => {
   return await response.json();
 };
 
+/**
+ * Unsubscribes a candidate globally from all Smartlead campaigns
+ * @param {string} candidateId - Candidate UUID
+ * @returns {Promise<object>} Unsubscribe response
+ */
+export const unsubscribeCandidateGlobally = async (candidateId) => {
+  const response = await apiRequest(`/outreach/candidates/${candidateId}/unsubscribe-global`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    throw await handleApiError(response);
+  }
+
+  return await response.json();
+};
+

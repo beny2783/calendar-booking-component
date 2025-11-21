@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import DatePicker from './DatePicker';
 import TimeSlotSelector from './TimeSlotSelector';
 import { convertToISO8601, getUserTimezone, formatISO8601ForDisplay } from '../utils/dateUtils';
-import { createBooking, checkScheduledCall, scheduleCall, triggerImmediateCall } from '../utils/api';
+import { createBooking, checkScheduledCall, scheduleCall, triggerImmediateCall, unsubscribeCandidateGlobally } from '../utils/api';
 import './BookingPage.css';
 
 const BookingPage = () => {
@@ -22,6 +22,9 @@ const BookingPage = () => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [isImmediateCall, setIsImmediateCall] = useState(false); // Track if this is immediate call
   const [confirmedPhoneNumber, setConfirmedPhoneNumber] = useState('');
+  const [isUnsubscribing, setIsUnsubscribing] = useState(false);
+  const [unsubscribeSuccess, setUnsubscribeSuccess] = useState(false);
+  const [showUnsubscribeModal, setShowUnsubscribeModal] = useState(false);
 
   // Get candidate_id from URL path parameter
   const { candidate_id: candidateIdFromPath } = useParams();
@@ -342,6 +345,37 @@ const BookingPage = () => {
     setError(null);
   };
 
+  const handleUnsubscribe = async () => {
+    if (!candidateId) {
+      setError('Missing required parameter: candidate_id must be provided');
+      return;
+    }
+
+    setIsUnsubscribing(true);
+    setError(null);
+
+    try {
+      await unsubscribeCandidateGlobally(candidateId);
+      setUnsubscribeSuccess(true);
+      setShowUnsubscribeModal(false);
+    } catch (err) {
+      console.error('Error unsubscribing candidate:', err);
+      setError(err.message || 'Failed to unsubscribe. Please try again.');
+    } finally {
+      setIsUnsubscribing(false);
+    }
+  };
+
+  const handleOpenUnsubscribeModal = () => {
+    setShowUnsubscribeModal(true);
+    setError(null);
+  };
+
+  const handleCloseUnsubscribeModal = () => {
+    setShowUnsubscribeModal(false);
+    setError(null);
+  };
+
   const handleImmediateCall = async () => {
     if (!candidateId) {
       setError('Missing required parameter: candidate_id must be provided');
@@ -588,6 +622,23 @@ const BookingPage = () => {
                   >
                     {isTriggeringCall ? 'Calling...' : 'Call Now'}
                   </button>
+                </div>
+              )}
+
+              {/* Unsubscribe section */}
+              {candidateId && (
+                <div className="unsubscribe-section">
+                  <div className="unsubscribe-divider"></div>
+                  <button
+                    onClick={handleOpenUnsubscribeModal}
+                    className="unsubscribe-button"
+                    disabled={isUnsubscribing}
+                  >
+                    {isUnsubscribing ? 'Unsubscribing...' : 'Unsubscribe'}
+                  </button>
+                  <p className="unsubscribe-label">
+                    I don't want to be contacted about jobs
+                  </p>
                 </div>
               )}
             </div>
@@ -856,6 +907,92 @@ const BookingPage = () => {
                       : scheduledCallInfo?.isFuture 
                         ? 'Reschedule Call' 
                         : 'Confirm & Schedule'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unsubscribe Confirmation Modal */}
+      {showUnsubscribeModal && (
+        <div className="modal-overlay" onClick={handleCloseUnsubscribeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Unsubscribe from All Campaigns</h2>
+              <button 
+                className="modal-close-button"
+                onClick={handleCloseUnsubscribeModal}
+                aria-label="Close"
+                disabled={isUnsubscribing}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="unsubscribe-warning">
+                <svg className="unsubscribe-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
+                </svg>
+                <div>
+                  <strong>This action cannot be easily undone</strong>
+                  <p>
+                    This will unsubscribe you from ALL campaigns and prevent you from being added to any future campaigns. 
+                    You will no longer receive job opportunities from us.
+                  </p>
+                </div>
+              </div>
+
+              {error && (
+                <div className="error-message">
+                  <p>{error}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                onClick={handleCloseUnsubscribeModal}
+                className="modal-cancel-button"
+                disabled={isUnsubscribing}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUnsubscribe}
+                className="modal-confirm-button unsubscribe-confirm-button"
+                disabled={isUnsubscribing}
+              >
+                {isUnsubscribing ? 'Unsubscribing...' : 'Yes, Unsubscribe'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unsubscribe Success Message */}
+      {unsubscribeSuccess && (
+        <div className="modal-overlay">
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Unsubscribed Successfully</h2>
+            </div>
+            <div className="modal-body">
+              <div className="unsubscribe-success">
+                <div className="success-icon">✓</div>
+                <p>You have been successfully unsubscribed from all campaigns.</p>
+                <p>You will no longer receive job opportunities from us.</p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                onClick={() => {
+                  setUnsubscribeSuccess(false);
+                  window.location.reload();
+                }}
+                className="modal-confirm-button"
+              >
+                Close
               </button>
             </div>
           </div>
