@@ -3,6 +3,8 @@
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const AUTH_EMAIL = import.meta.env.VITE_AUTH_EMAIL || 'frontend-service@email.com';
+const AUTH_PASSWORD = import.meta.env.VITE_AUTH_PASSWORD || 'password';
 
 /**
  * Gets the authentication token from storage
@@ -28,13 +30,61 @@ export const removeAuthToken = () => {
 };
 
 /**
+ * Logs in and retrieves an authentication token
+ * @returns {Promise<string>} Access token
+ */
+export const login = async () => {
+  const loginUrl = `${API_BASE_URL}/auth/login`;
+  
+  const response = await fetch(loginUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      username: AUTH_EMAIL,  // FastAPI OAuth2 uses 'username' field
+      password: AUTH_PASSWORD,
+    }),
+  });
+
+  if (!response.ok) {
+    throw await handleApiError(response);
+  }
+
+  const data = await response.json();
+  const token = data.access_token;
+  
+  if (!token) {
+    throw new Error('No access token received from login');
+  }
+
+  setAuthToken(token);
+  return token;
+};
+
+/**
+ * Ensures the app is authenticated, logging in if necessary
+ * @returns {Promise<string>} Access token
+ */
+export const ensureAuthenticated = async () => {
+  let token = getAuthToken();
+  
+  // If no token exists, login
+  if (!token) {
+    token = await login();
+  }
+  
+  return token;
+};
+
+/**
  * Makes an authenticated API request
  * @param {string} endpoint - API endpoint (e.g., '/core/candidate-bookings')
  * @param {object} options - Fetch options
  * @returns {Promise<Response>} Fetch response
  */
 export const apiRequest = async (endpoint, options = {}) => {
-  const token = getAuthToken();
+  let token = getAuthToken();
   const url = `${API_BASE_URL}${endpoint}`;
 
   const headers = {
@@ -46,10 +96,25 @@ export const apiRequest = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
+  let response = await fetch(url, {
     ...options,
     headers,
   });
+
+  // If we get a 401, try to re-authenticate and retry once
+  if (response.status === 401 && token) {
+    try {
+      const newToken = await login();
+      headers['Authorization'] = `Bearer ${newToken}`;
+      response = await fetch(url, {
+        ...options,
+        headers,
+      });
+    } catch (loginError) {
+      // Re-authentication failed, return the original 401 response
+      console.error('Re-authentication failed:', loginError);
+    }
+  }
 
   return response;
 };
