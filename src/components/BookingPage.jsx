@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import DatePicker from './DatePicker';
 import TimeSlotSelector from './TimeSlotSelector';
 import { convertToISO8601, getUserTimezone, formatISO8601ForDisplay } from '../utils/dateUtils';
-import { createBooking, checkScheduledCall, scheduleCall, triggerImmediateCall, unsubscribeCandidateGlobally } from '../utils/api';
+import { createBooking, checkScheduledCall, scheduleCall, triggerImmediateCall, unsubscribeCandidateGlobally, cancelScheduledCall } from '../utils/api';
 import './BookingPage.css';
 
 const BookingPage = () => {
@@ -25,6 +25,7 @@ const BookingPage = () => {
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [unsubscribeSuccess, setUnsubscribeSuccess] = useState(false);
   const [showUnsubscribeModal, setShowUnsubscribeModal] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
 
   // Get candidate_id from URL path parameter
   const { candidate_id: candidateIdFromPath } = useParams();
@@ -376,6 +377,42 @@ const BookingPage = () => {
     setError(null);
   };
 
+  const handleCancelScheduledCall = async () => {
+    if (!candidateId) {
+      setError('Missing required parameter: candidate_id must be provided');
+      return;
+    }
+
+    // Confirm cancellation
+    const confirm = window.confirm(
+      'Are you sure you want to cancel your scheduled call? This action cannot be undone.'
+    );
+    if (!confirm) return;
+
+    setIsCanceling(true);
+    setError(null);
+
+    try {
+      const result = await cancelScheduledCall(candidateId);
+      
+      // Show success message
+      if (result.canceled_count > 0) {
+        // Refresh scheduled call info
+        await loadScheduledCall();
+        // Clear any selected date/time since call is canceled
+        setSelectedDate(null);
+        setSelectedTime(null);
+      } else {
+        setError('No scheduled calls found to cancel');
+      }
+    } catch (err) {
+      console.error('Error canceling scheduled call:', err);
+      setError(err.message || 'Failed to cancel call. Please try again.');
+    } finally {
+      setIsCanceling(false);
+    }
+  };
+
   const handleImmediateCall = async () => {
     if (!candidateId) {
       setError('Missing required parameter: candidate_id must be provided');
@@ -604,6 +641,15 @@ const BookingPage = () => {
                   </div>
                   {!scheduledCallInfo.isFuture && (
                     <div className="warning-text">This call is in the past</div>
+                  )}
+                  {scheduledCallInfo.isFuture && (
+                    <button
+                      onClick={handleCancelScheduledCall}
+                      disabled={isCanceling}
+                      className="cancel-call-button"
+                    >
+                      {isCanceling ? 'Canceling...' : 'Cancel Call'}
+                    </button>
                   )}
                 </div>
               )}

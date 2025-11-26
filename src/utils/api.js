@@ -361,3 +361,20 @@ export const unsubscribeCandidateGlobally = async (candidateId) => {
   return await response.json();
 };
 
+/**
+ * Cancels scheduled calls for a candidate
+ * @param {string} candidateId - Candidate UUID
+ * @returns {Promise<object>} Cancel response with canceled_count and canceled_calls
+ */
+export const cancelScheduledCall = async (candidateId) => {
+  const response = await apiRequest(`/call-trigger/calls/scheduled?candidate_id=${candidateId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw await handleApiError(response);
+  }
+
+  return await response.json();
+};
+

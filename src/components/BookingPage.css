@@ -1649,3 +1649,39 @@
     font-size: 14px;
   }
 }
+
+/* Cancel Call Button */
+.cancel-call-button {
+  margin-top: 12px;
+  padding: 10px 20px;
+  background-color: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.cancel-call-button:hover:not(:disabled) {
+  color: #ef4444;
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.cancel-call-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile styles for cancel button */
+@media (max-width: 480px) {
+  .cancel-call-button {
+    padding: 12px 20px;
+    font-size: 14px;
+    min-height: 44px;
+    margin-top: 10px;
+  }
+}
