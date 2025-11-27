@@ -1,6 +1,6 @@
 # Simple Booking Application
 
-A minimal, clean booking application that allows users to schedule calls by selecting a date and time. Perfect for email-based booking links. Follows FastAPI conventions for API integration.
+A minimal, clean booking application that allows users to schedule calls by selecting a date and time. Perfect for email-based booking links. Follows FastAPI conventions for API integration. New change
 
 ## Features
 
