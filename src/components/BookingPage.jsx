@@ -544,20 +544,22 @@ const BookingPage = () => {
                   ? 'Your call is being initiated now.' 
                   : 'Your call has been scheduled for:'}
               </p>
-            <div className="booking-details">
-              {bookingData.status !== 'TRIGGERED' && bookingData.scheduled_at && (
-                <>
-                  <p><strong>Date:</strong> {displayInfo.date}</p>
-                  <p><strong>Time:</strong> {displayInfo.time} ({displayInfo.timezone})</p>
-                </>
-              )}
-              {bookingData.duration_minutes && (
-                <p><strong>Duration:</strong> {bookingData.duration_minutes} minutes</p>
-              )}
-              {bookingData.meeting_link && (
-                <p><strong>Meeting Link:</strong> <a href={bookingData.meeting_link} target="_blank" rel="noopener noreferrer">{bookingData.meeting_link}</a></p>
-              )}
-            </div>
+            {((bookingData.status !== 'TRIGGERED' && bookingData.scheduled_at) || bookingData.duration_minutes || bookingData.meeting_link) && (
+              <div className="booking-details">
+                {bookingData.status !== 'TRIGGERED' && bookingData.scheduled_at && (
+                  <>
+                    <p><strong>Date:</strong> {displayInfo.date}</p>
+                    <p><strong>Time:</strong> {displayInfo.time} ({displayInfo.timezone})</p>
+                  </>
+                )}
+                {bookingData.duration_minutes && (
+                  <p><strong>Duration:</strong> {bookingData.duration_minutes} minutes</p>
+                )}
+                {bookingData.meeting_link && (
+                  <p><strong>Meeting Link:</strong> <a href={bookingData.meeting_link} target="_blank" rel="noopener noreferrer">{bookingData.meeting_link}</a></p>
+                )}
+              </div>
+            )}
             {!candidatePhoneNumber && (
               <p className="confirmation-note">
                 You will receive a confirmation email shortly.
@@ -596,7 +598,7 @@ const BookingPage = () => {
           {/* Left Panel - Event Details */}
           <div className="event-details-panel">
             <div className="event-info">
-              <h1 className="event-title">Speak with a Virtual Recruiter</h1>
+              <h1 className="event-title">Let's Find Your Best Next Role</h1>
               
               <div className="event-meta">
                 <div className="meta-item">
@@ -604,19 +606,12 @@ const BookingPage = () => {
                     <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
                     <path d="M8 4v4l3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
-                  <span>{durationMinutes} min</span>
-                </div>
-                <div className="meta-item">
-                  <svg className="meta-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H3zm0 1h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" fill="currentColor"/>
-                    <circle cx="8" cy="7" r="1.5" fill="currentColor"/>
-                  </svg>
-                  <span>A call will be made to your mobile number</span>
+                  <span>{durationMinutes} min phone call</span>
                 </div>
               </div>
               
               <div className="event-description">
-                <p>This call is to match you with new roles we are looking to place.</p>
+                <p>Schedule a brief call with Emma, our virtual recruiter. In this short chat she'll learn what you're looking for, share relevant openings, and make sure any roles we discuss align with your goals and experience.</p>
               </div>
 
               {/* Show existing scheduled call info */}
@@ -694,7 +689,6 @@ const BookingPage = () => {
           <div className="calendar-panel">
             <div className="calendar-panel-header">
               <h2 className="panel-title">Select a Date & Time</h2>
-              <div className="powered-by-badge">POWERED BY SuperFront</div>
             </div>
 
             {/* Rescheduling warning - outside flex container */}
