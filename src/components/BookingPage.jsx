@@ -719,9 +719,11 @@ const BookingPage = () => {
               {/* Immediate call button - Alternative to scheduling */}
               {candidateId && (
                 <div className="immediate-call-section">
-                  <div className="call-now-divider">
-                    <span>or</span>
-                  </div>
+                  {scheduledCallInfo && (
+                    <div className="call-now-divider">
+                      <span>or</span>
+                    </div>
+                  )}
                   <p className="call-now-label">Prefer to speak immediately</p>
                   <button
                     onClick={handleImmediateCall}
