@@ -47,6 +47,11 @@ const DatePicker = ({ selectedDate, onDateSelect }) => {
     return date.toDateString() === selectedDate.toDateString();
   };
 
+  const isToday = (date) => {
+    if (!date) return false;
+    return date.toDateString() === today.toDateString();
+  };
+
   const handleDateClick = (date) => {
     if (date && !isPastDate(date)) {
       onDateSelect(date);
@@ -89,15 +94,17 @@ const DatePicker = ({ selectedDate, onDateSelect }) => {
           
           const past = isPastDate(date);
           const selected = isSelected(date);
+          const isTodayDate = isToday(date);
           
           return (
             <button
               key={date.toISOString()}
-              className={`calendar-day ${past ? 'past' : ''} ${selected ? 'selected' : ''}`}
+              className={`calendar-day ${past ? 'past' : ''} ${selected ? 'selected' : ''} ${isTodayDate ? 'today' : ''}`}
               onClick={() => handleDateClick(date)}
               disabled={past}
             >
               {date.getDate()}
+              {isTodayDate && !selected && <span className="today-badge">Today</span>}
             </button>
           );
         })}

@@ -5,7 +5,7 @@
 }
 
 :root {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace, system-ui, -apple-system, sans-serif;
+  font-family: 'Helvetica', 'Arial', sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import DatePicker from './DatePicker';
 import TimeSlotSelector from './TimeSlotSelector';
@@ -26,6 +26,25 @@ const BookingPage = () => {
   const [unsubscribeSuccess, setUnsubscribeSuccess] = useState(false);
   const [showUnsubscribeModal, setShowUnsubscribeModal] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isScheduledCallExpanded, setIsScheduledCallExpanded] = useState(true); // Default to expanded (desktop)
+  const phoneInputRef = useRef(null);
+
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 480;
+      setIsMobile(mobile);
+      if (mobile) {
+        setIsScheduledCallExpanded(false); // Collapse on mobile
+      } else {
+        setIsScheduledCallExpanded(true); // Expand on desktop
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Get candidate_id from URL path parameter
   const { candidate_id: candidateIdFromPath } = useParams();
@@ -75,6 +94,7 @@ const BookingPage = () => {
     setIsCheckingCall(true);
     try {
       const data = await checkScheduledCall(candidateId);
+      console.log('Scheduled call data:', data); // Debug: check what API returns
       
       // Extract phone number from response (NEW: candidate_phone_number field)
       if (data?.candidate_phone_number) {
@@ -95,18 +115,37 @@ const BookingPage = () => {
       }
       
       // Extract scheduled call info
-      if (data && data.has_scheduled_call && data.next_scheduled_call) {
-        setScheduledCallInfo({
-          scheduledTime: data.next_scheduled_call.scheduled ? new Date(data.next_scheduled_call.scheduled) : null,
-          isFuture: data.is_future,
-          status: data.next_scheduled_call.status,
-        });
+      // Only set scheduledCallInfo if has_scheduled_call is explicitly true AND next_scheduled_call exists
+      // Also check that status is not CANCELED and call is in the future
+      if (data && data.has_scheduled_call === true && data.next_scheduled_call) {
+        const callStatus = data.next_scheduled_call.status?.toUpperCase();
+        const scheduledTime = data.next_scheduled_call.scheduled ? new Date(data.next_scheduled_call.scheduled) : null;
+        const isFuture = data.is_future;
+        
+        // Don't show canceled calls or past calls
+        if (callStatus !== 'CANCELED' && callStatus !== 'CANCELLED' && isFuture && scheduledTime && scheduledTime > new Date()) {
+          setScheduledCallInfo({
+            scheduledTime: scheduledTime,
+            isFuture: isFuture,
+            status: data.next_scheduled_call.status,
+          });
+        } else {
+          // Explicitly clear if call is canceled or in the past
+          if (callStatus === 'CANCELED' || callStatus === 'CANCELLED') {
+            console.log('Call is canceled, clearing scheduledCallInfo');
+          } else if (!isFuture || (scheduledTime && scheduledTime <= new Date())) {
+            console.log('Call is in the past, clearing scheduledCallInfo');
+          }
+          setScheduledCallInfo(null);
+        }
       } else {
+        // Explicitly clear if no call exists
         setScheduledCallInfo(null);
       }
     } catch (err) {
       console.error('Error checking scheduled call:', err);
-      // Don't show error to user, just log it
+      // Clear scheduled call info on error to avoid stale data
+      setScheduledCallInfo(null);
     } finally {
       setIsCheckingCall(false);
     }
@@ -298,15 +337,21 @@ const BookingPage = () => {
       return;
     }
 
-    // Close modal
-    setShowConfirmationModal(false);
+    // Keep modal open to show loading state
     setError(null);
+    setIsLoading(true);
 
     // Handle immediate call or scheduled call
-    if (isImmediateCall) {
-      await handleImmediateCallConfirm(phoneNumber);
-    } else {
-      await handleScheduleCall(phoneNumber);
+    try {
+      if (isImmediateCall) {
+        await handleImmediateCallConfirm(phoneNumber);
+      } else {
+        await handleScheduleCall(phoneNumber);
+      }
+    } catch (err) {
+      // Error handling is done in the individual functions
+      // Reset loading state if needed
+      setIsLoading(false);
     }
   };
 
@@ -329,14 +374,17 @@ const BookingPage = () => {
 
       // Refresh scheduled call info
       await loadScheduledCall();
+      
+      // Close modal on success - this will show the confirmation screen
+      setShowConfirmationModal(false);
     } catch (err) {
       console.error('Error triggering immediate call:', err);
       setError(err.message || 'Failed to trigger call. Please try again.');
-      // Re-open modal on error
-      setShowConfirmationModal(true);
+      // Keep modal open on error so user can see the error and try again
     } finally {
       setIsTriggeringCall(false);
       setIsImmediateCall(false);
+      setIsLoading(false);
     }
   };
 
@@ -577,6 +625,10 @@ const BookingPage = () => {
         {/* Error messages at top */}
         {error && (
           <div className="error-message-top">
+            <svg className="error-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+              <path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
             <p>{error}</p>
           </div>
         )}
@@ -611,40 +663,55 @@ const BookingPage = () => {
               </div>
               
               <div className="event-description">
-                <p>Schedule a brief call with Emma, our virtual recruiter. In this short chat she'll learn what you're looking for, share relevant openings, and make sure any roles we discuss align with your goals and experience.</p>
+                <p>
+                  Schedule a brief call with Emma, our virtual recruiter. In this short chat she'll learn what you're looking for, share relevant openings, and make sure any roles we discuss align with your goals and experience.
+                </p>
               </div>
 
               {/* Show existing scheduled call info */}
               {scheduledCallInfo && !isCheckingCall && (
-                <div className={`scheduled-call-info ${!scheduledCallInfo.isFuture ? 'warning' : ''}`}>
-                  <div className="scheduled-call-header">
+                <div className={`scheduled-call-info ${!scheduledCallInfo.isFuture ? 'warning' : ''} ${isMobile ? 'collapsible' : ''}`}>
+                  <div 
+                    className="scheduled-call-header"
+                    onClick={isMobile ? () => setIsScheduledCallExpanded(!isScheduledCallExpanded) : undefined}
+                    style={isMobile ? { cursor: 'pointer' } : {}}
+                  >
                     <span className="scheduled-call-label">Existing Scheduled Call</span>
-                    <span className={`scheduled-call-status status-${scheduledCallInfo.status?.toLowerCase() || 'scheduled'}`}>
-                      {scheduledCallInfo.status}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className={`scheduled-call-status status-${scheduledCallInfo.status?.toLowerCase() || 'scheduled'}`}>
+                        {scheduledCallInfo.status}
+                      </span>
+                      {isMobile && (
+                        <span className={`expand-arrow ${isScheduledCallExpanded ? 'expanded' : ''}`}>▼</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="scheduled-call-time">
-                    {scheduledCallInfo.scheduledTime?.toLocaleDateString('en-GB', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric'
-                    })}, {scheduledCallInfo.scheduledTime?.toLocaleTimeString('en-GB', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit'
-                    })}
-                  </div>
-                  {!scheduledCallInfo.isFuture && (
-                    <div className="warning-text">This call is in the past</div>
-                  )}
-                  {scheduledCallInfo.isFuture && (
-                    <button
-                      onClick={handleCancelScheduledCall}
-                      disabled={isCanceling}
-                      className="cancel-call-button"
-                    >
-                      {isCanceling ? 'Canceling...' : 'Cancel Call'}
-                    </button>
+                  {(!isMobile || isScheduledCallExpanded) && (
+                    <>
+                      <div className="scheduled-call-time">
+                        {scheduledCallInfo.scheduledTime?.toLocaleDateString('en-GB', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}, {scheduledCallInfo.scheduledTime?.toLocaleTimeString('en-GB', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit'
+                        })}
+                      </div>
+                      {!scheduledCallInfo.isFuture && (
+                        <div className="warning-text">This call is in the past</div>
+                      )}
+                      {scheduledCallInfo.isFuture && (
+                        <button
+                          onClick={handleCancelScheduledCall}
+                          disabled={isCanceling}
+                          className="cancel-call-button"
+                        >
+                          {isCanceling ? 'Canceling...' : 'Cancel Call'}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -666,28 +733,25 @@ const BookingPage = () => {
                 </div>
               )}
 
-              {/* Unsubscribe section */}
-              {candidateId && (
-                <div className="unsubscribe-section">
-                  <div className="unsubscribe-divider"></div>
-                  <button
-                    onClick={handleOpenUnsubscribeModal}
-                    className="unsubscribe-button"
-                    disabled={isUnsubscribing}
-                  >
-                    {isUnsubscribing ? 'Unsubscribing...' : 'Unsubscribe'}
-                  </button>
-                  <p className="unsubscribe-label">
-                    I don't want to be contacted about jobs
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
+          {/* Unsubscribe section - moved to bottom */}
+          {candidateId && (
+            <div className="unsubscribe-section-bottom">
+              <button
+                onClick={handleOpenUnsubscribeModal}
+                className="unsubscribe-button-bottom"
+                disabled={isUnsubscribing}
+              >
+                {isUnsubscribing ? 'Unsubscribing...' : 'Unsubscribe'}
+              </button>
+            </div>
+          )}
+
           {/* Right Panel - Calendar & Time Selection */}
           <div className="calendar-panel">
-            <div className="calendar-panel-header">
+            <div className="calendar-panel-header sticky-header">
               <h2 className="panel-title">Select a Date & Time</h2>
             </div>
 
@@ -709,9 +773,21 @@ const BookingPage = () => {
                   selectedDate={selectedDate} 
                   onDateSelect={handleDateSelect} 
                 />
-                <div className="timezone-selector">
-                  <label>Time zone</label>
-                  <div className="timezone-display">
+                {!isMobile && (
+                  <div className="timezone-selector">
+                    <label>Time zone</label>
+                    <div className="timezone-display">
+                      {new Date().toLocaleTimeString('en-GB', { 
+                        timeZone: 'Europe/London',
+                        timeZoneName: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }).split(' ').pop()} - Europe/London
+                    </div>
+                  </div>
+                )}
+                {isMobile && (
+                  <div className="timezone-badge-mobile">
                     {new Date().toLocaleTimeString('en-GB', { 
                       timeZone: 'Europe/London',
                       timeZoneName: 'short',
@@ -719,7 +795,7 @@ const BookingPage = () => {
                       minute: '2-digit'
                     }).split(' ').pop()} - Europe/London
                   </div>
-                </div>
+                )}
               </div>
 
               {selectedDate && (
@@ -866,6 +942,7 @@ const BookingPage = () => {
                     <span className="country-code">+44</span>
                   </div>
                   <input
+                    ref={phoneInputRef}
                     type="tel"
                     id="confirm-phone"
                     value={confirmedPhoneNumber.replace(/^\+44/, '').replace(/\s/g, '')}
@@ -875,6 +952,14 @@ const BookingPage = () => {
                       // Limit to 10-11 digits (UK mobile/landline)
                       if (value.length <= 11) {
                         setConfirmedPhoneNumber(value);
+                      }
+                    }}
+                    onFocus={() => {
+                      // Auto-scroll input into view on mobile
+                      if (isMobile && phoneInputRef.current) {
+                        setTimeout(() => {
+                          phoneInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300);
                       }
                     }}
                     onBlur={(e) => {

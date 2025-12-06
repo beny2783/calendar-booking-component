@@ -98,6 +98,24 @@
   border-radius: 50%;
 }
 
+.calendar-day.today:not(.selected) {
+  border: 2px solid #ff6b35;
+  background: #fff5f2;
+}
+
+.today-badge {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 600;
+  color: #ff6b35;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .calendar-day.past {
   color: #d1d5db;
   cursor: not-allowed;
@@ -160,6 +178,16 @@
     font-weight: 700;
     background: #ff6b35 !important; /* Ensure orange background on mobile */
     color: white !important;
+  }
+
+  .calendar-day.today:not(.selected) {
+    border: 2px solid #ff6b35;
+    background: #fff5f2;
+  }
+
+  .today-badge {
+    font-size: 8px;
+    bottom: -16px;
   }
 
   .calendar-day:hover:not(.past):not(:disabled):not(.empty) {
